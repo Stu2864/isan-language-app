@@ -15,7 +15,6 @@ warn_on_root = 1
 
 [app@android]
 android.accept_sdk_license = True
-android.arch = arm64-v8a
+android.arch = arm64-v8a  # SINGLE ARCHITECTURE ONLY
 android.api = 31
 android.minapi = 21
-bootstrap = webview
