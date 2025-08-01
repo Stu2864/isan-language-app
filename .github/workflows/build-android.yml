@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-android:
-    runs-on: ubuntu-22.04  # Use newer Ubuntu version
+    runs-on: ubuntu-22.04
     
     steps:
     - uses: actions/checkout@v4
@@ -24,11 +24,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential git python3-pip libffi-dev libssl-dev libxml2-dev libxslt1-dev zlib1g-dev python3-dev python3-venv openjdk-11-jdk cmake autoconf automake libtool pkg-config
         
-    - name: Install Python dependencies with specific versions
+    - name: Install Python dependencies
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
-        pip install cython==0.29.36  # Specific version for compatibility
+        pip install cython==0.29.36
         pip install buildozer==1.5.0
         pip install kivy==2.1.0
         
@@ -73,33 +73,24 @@ warn_on_root = 1
 
 [app@android]
 android.accept_sdk_license = True
-android.arch = arm64-v8a  # Single architecture for faster build
+android.arch = arm64-v8a
 android.api = 31
 android.minapi = 21
 SPECEND
         
-    - name: Build APK with single architecture
+    - name: Build APK
       run: |
-        # Set environment variables
         export ANDROID_HOME="$HOME/android-sdk"
         export ANDROID_SDK_ROOT="$HOME/android-sdk"
         
-        # Build with single architecture (faster, less error-prone)
-        timeout 60m buildozer android debug
+        # Accept any remaining licenses
+        echo "y" | buildozer android debug
       continue-on-error: true
       
-    - name: Check for APK
-      run: |
-        echo "Checking for APK files..."
-        find . -name "*.apk" -type f || echo "No APK files found"
-        ls -la bin/ || echo "Bin directory not found"
-        
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: isan-language-app
-        path: |
-          bin/*.apk
-          *.apk
+        path: bin/*.apk
         if-no-files-found: ignore
         retention-days: 30
