@@ -1,29 +1,71 @@
 name: Build Android APK
+
 on:
   workflow_dispatch:
+
 jobs:
   build-android:
     runs-on: ubuntu-22.04
+    
     steps:
     - uses: actions/checkout@v4
+    
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.9'
-    - name: Install dependencies
+        
+    - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential git python3-pip libffi-dev libssl-dev openjdk-11-jdk
-        pip install --upgrade pip
-        pip install buildozer cython kivy==2.1.0
-    - name: Build APK
+        sudo apt-get install -y build-essential git python3-pip libffi-dev libssl-dev openjdk-11-jdk cmake autoconf automake libtool pkg-config
+        
+    - name: Install Python dependencies with Cython
       run: |
-        buildozer init
+        pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install cython==0.29.36
+        pip install buildozer==1.5.0
+        pip install kivy==2.1.0
+        pip install pyjnius==1.4.2
+        
+    - name: Force Cython regeneration
+      run: |
+        # Clean any cached Cython files
+        find . -name "*.c" -delete 2>/dev/null || echo "No .c files to clean"
+        find . -name "*.so" -delete 2>/dev/null || echo "No .so files to clean"
+        
+        # Force Cython to regenerate source files
+        python -c "import cython; print('Cython version:', cython.__version__)"
+        
+    - name: Accept Android SDK licenses
+      run: |
+        mkdir -p $HOME/android-sdk
+        export ANDROID_HOME=$HOME/android-sdk
         echo "y" | buildozer android debug
       continue-on-error: true
+      
+    - name: Build APK with forced Cython regeneration
+      run: |
+        # Set environment variables
+        export ANDROID_HOME="$HOME/android-sdk"
+        export ANDROID_SDK_ROOT="$HOME/android-sdk"
+        
+        # Force buildozer to regenerate all files
+        buildozer android clean
+        buildozer android debug
+      continue-on-error: true
+      
+    - name: Check for generated files
+      run: |
+        echo "Checking for generated C files..."
+        find . -name "*.c" -type f | head -10 || echo "No .c files found"
+        find .buildozer -name "*.c" -type f | head -10 || echo "No .buildozer .c files found"
+        
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: isan-language-app
         path: bin/*.apk
         if-no-files-found: ignore
+        retention-days: 30
