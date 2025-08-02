@@ -15,10 +15,10 @@ warn_on_root = 1
 
 [app@android]
 android.accept_sdk_license = True
-android.arch = arm64-v8a  # Single architecture (faster and more reliable)
+android.arch = arm64-v8a  # SINGLE ARCHITECTURE ONLY (faster, more reliable)
 android.api = 33
 android.minapi = 21
 android.sdk = 33
 android.ndk = 25b
 android.build_tools_version = 33.0.0
-android.ndk_api = 23  # Updated NDK API level (higher compatibility)
+android.ndk_api = 23
