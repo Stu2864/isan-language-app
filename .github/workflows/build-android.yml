@@ -1,6 +1,8 @@
 name: Build Android APK
+
 on:
   workflow_dispatch:
+
 jobs:
   build-android:
     runs-on: ubuntu-22.04
@@ -13,12 +15,16 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential git python3-pip libffi-dev libssl-dev openjdk-11-jdk
+        sudo apt-get install -y build-essential git python3-pip openjdk-11-jdk cmake autoconf automake libtool pkg-config
+    - name: Install Python dependencies
+      run: |
         pip install --upgrade pip
-        pip install buildozer cython kivy==2.1.0
+        pip install cython==0.29.36
+        pip install buildozer==1.5.0
+        pip install kivy==2.1.0
+        pip install pyjnius==1.4.2
     - name: Build APK
       run: |
-        buildozer init
         echo "y" | buildozer android debug
       continue-on-error: true
     - name: Upload APK
@@ -27,4 +33,3 @@ jobs:
         name: isan-language-app
         path: bin/*.apk
         if-no-files-found: ignore
-        retention-days: 30
