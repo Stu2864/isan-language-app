@@ -5,11 +5,11 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
 
 jobs:
   build-android:
-    runs-on: ubuntu-22.04  # Use newer Ubuntu version for better compatibility
+    runs-on: ubuntu-22.04
     
     steps:
     - uses: actions/checkout@v4
@@ -31,18 +31,8 @@ jobs:
         pip install cython==0.29.36
         pip install buildozer==1.5.0
         pip install kivy==2.1.0
-        pip install pyjnius==1.6.1  # Use the version that worked
+        pip install pyjnius==1.6.1
         
-    - name: Accept Android SDK licenses
-      run: |
-        mkdir -p $HOME/android-sdk
-        export ANDROID_HOME=$HOME/android-sdk
-        export ANDROID_SDK_ROOT=$HOME/android-sdk
-        
-        # Accept licenses automatically
-        echo "y" | buildozer android debug
-      continue-on-error: true
-      
     - name: Create buildozer.spec
       run: |
         cat > buildozer.spec << 'SPECEND'
@@ -53,7 +43,7 @@ package.domain = org.isanlanguage
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json,txt
 version = 1.0
-requirements = python3,kivy==2.1.0,pyjnius==1.6.1  # Use working version
+requirements = python3,kivy==2.1.0,pyjnius==1.6.1
 orientation = portrait
 fullscreen = 0
 
@@ -63,26 +53,20 @@ warn_on_root = 1
 
 [app@android]
 android.accept_sdk_license = True
-android.arch = arm64-v8a  # Single architecture (faster)
+android.arch = arm64-v8a
 android.api = 33
 android.minapi = 21
-android.ndk = 25b
 android.sdk = 33
+android.ndk = 25b
+android.build_tools_version = 33.0.0
 SPECEND
         
-    - name: Build APK with optimizations
+    - name: Build APK
       run: |
-        export ANDROID_HOME="$HOME/android-sdk"
-        export ANDROID_SDK_ROOT="$HOME/android-sdk"
-        
-        # Clean previous builds
-        buildozer android clean
-        
-        # Build with single architecture (faster and more reliable)
         timeout 60m buildozer android debug
       continue-on-error: true
       
-    - name: Check build results
+    - name: Check for APK
       run: |
         echo "Checking for APK files..."
         find . -name "*.apk" -type f || echo "No APK files found"
